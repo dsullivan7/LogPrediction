@@ -2,16 +2,16 @@
 
 ## Download sample data
 ```
-	cd data
-	wget --no-check-certificate https://softinst55731.host.vifib.net/hzsyabevxonjwcfqqdamsizfxjoynurk/server-log/2014-07-21.tar.gz
-	wget --no-check-certificate https://softinst55731.host.vifib.net/hzsyabevxonjwcfqqdamsizfxjoynurk/server-log/2014-08-22.tar.gz
-	wget --no-check-certificate https://softinst55615.host.vifib.net/kgmhqsbaupciefojhgkdrwevqmcinyps/server-log/2014-09-30.tar.gz
-	wget --no-check-certificate https://softinst55615.host.vifib.net/kgmhqsbaupciefojhgkdrwevqmcinyps/server-log/2014-10-26.tar.gz
+cd data
+wget --no-check-certificate https://softinst55731.host.vifib.net/hzsyabevxonjwcfqqdamsizfxjoynurk/server-log/2014-07-21.tar.gz
+wget --no-check-certificate https://softinst55731.host.vifib.net/hzsyabevxonjwcfqqdamsizfxjoynurk/server-log/2014-08-22.tar.gz
+wget --no-check-certificate https://softinst55615.host.vifib.net/kgmhqsbaupciefojhgkdrwevqmcinyps/server-log/2014-09-30.tar.gz
+wget --no-check-certificate https://softinst55615.host.vifib.net/kgmhqsbaupciefojhgkdrwevqmcinyps/server-log/2014-10-26.tar.gz
 ```
 
 ## run the demo
 ```
-	python run.py
+python run.py
 ```
 
 ## example log messages

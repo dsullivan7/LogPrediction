@@ -1,19 +1,25 @@
 import numpy as np
 import pandas as p
+import pickle
 from sklearn.cluster import Birch
 from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
 from sklearn.linear_model import SGDClassifier
 
+memory_threshold = .98
+number_per_hour = 100
+
 def train():
-	X_train, y_train = get_Xy("data/2014-07-21/", .8, 100)
-	X_test, y_test = get_Xy("data/2014-09-30/", .8, 100)
+	X_train, y_train = get_Xy("data/2014-07-21/", memory_threshold, number_per_hour)
+	X_test, y_test = get_Xy("data/2014-09-30/", memory_threshold, number_per_hour)
+	# X_test, y_test = get_Xy("data/2014-12-14/", memory_threshold, number_per_hour)
 
 	clf = SGDClassifier(n_iter=1000, average=True)
+	# clf = Birch()
 	clf.fit(X_train, y_train)
 	pred = clf.predict(X_test)
-	print(pred[pred == 1])
-	print("score: ", clf.score(X_test, y_test))
+
+	print("score: %1.6f" % np.mean(pred == y_test))
 
 
 def transform_t(arr, col):
@@ -53,5 +59,28 @@ def get_Xy(path, mem_thresh, num_prob):
 
 	return X, y
 
+def loop(reload=False):
+	data_dirs = ["data/2014-07-21/", "data/2014-09-30/"]
+	X_train = []
+	y_train = np.array([])
+	if reload:
+		for direc in data_dirs:
+			X_tmp, y_tmp = get_Xy(direc, memory_threshold, number_per_hour)
+			X_train.append(X_tmp)
+			y_train = np.append(y_train, y_tmp)
+
+		X_train = np.vstack(X_train)
+
+		clf = SGDClassifier(n_iter=1000, average=True)
+		clf.fit(X_train, y_train)
+
+		pickle.dump(clf, open("classifier.p", "wb"))
+
+	clf = pickle.load(open("classifier.p", "rb"))
+
+	X_tmp, y_tmp = get_Xy("data/2014-07-22/", memory_threshold, number_per_hour)
+	print("score %1.8f" % clf.score(X_tmp, y_tmp))
+
+
 if __name__ == "__main__":
-	train()
+	loop(False)

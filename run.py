@@ -9,19 +9,8 @@ from sklearn.linear_model import SGDClassifier
 
 memory_threshold = .98
 number_per_hour = 100
-
-def train():
-	X_train, y_train = get_Xy("data/2014-07-21/", memory_threshold, number_per_hour)
-	X_test, y_test = get_Xy("data/2014-09-30/", memory_threshold, number_per_hour)
-	# X_test, y_test = get_Xy("data/2014-12-14/", memory_threshold, number_per_hour)
-
-	clf = SGDClassifier(n_iter=1000, average=True)
-	# clf = Birch()
-	clf.fit(X_train, y_train)
-	pred = clf.predict(X_test)
-
-	print("score: %1.6f" % np.mean(pred == y_test))
-
+user_cols = [-2, 3, 5, 6, 7]
+system_cols = [-2, 1, 2, 3]
 
 def transform_t(arr, col):
 	for entry in arr:
@@ -35,8 +24,8 @@ def get_Xy(path, mem_thresh, num_prob):
 	system_arr = np.array(p.read_csv(os.path.join(path, "dump_system.csv"),
 						  index_col=None, header=None))
 
-	user_arr = user_arr[:, [-2, 3, 5, 6, 7]]
-	system_arr = system_arr[:, [-2, 1, 2, 3]]
+	user_arr = user_arr[:, user_cols]
+	system_arr = system_arr[:, system_cols]
 
 	transform_t(user_arr, 0)
 	transform_t(system_arr, 0)
@@ -57,10 +46,13 @@ def get_Xy(path, mem_thresh, num_prob):
 		y[trouble_indexes[mx]] = 1
 
 	X = user_arr[:, 1:]
-	ss = StandardScaler()
-	X = ss.fit_transform(X.astype(np.float64))
 
 	return X, y
+
+def process_single(message):
+	arr = np.array(message.split(","))
+	arr = arr[user_cols]
+	return arr[1:].astype(np.float64)
 
 def loop(reload=False):
 	X_train = []
@@ -76,16 +68,45 @@ def loop(reload=False):
 
 		X_train = np.vstack(X_train)
 
-		clf = SGDClassifier(n_iter=1000, average=True)
+		ss = StandardScaler()
+		X_train = ss.fit_transform(X_train.astype(np.float64))
+
+		clf = SGDClassifier(n_iter=1000, average=True, loss="log")
 		clf.fit(X_train, y_train)
 
 		pickle.dump(clf, open("classifier.p", "wb"))
+		pickle.dump(ss, open("scaler.p", "wb"))
+
 
 	clf = pickle.load(open("classifier.p", "rb"))
+	ss = pickle.load(open("scaler.p", "rb"))
 
+	# complete_user_arr = np.array(p.read_csv("data/2014-10-26/dump_user.csv",
+	# 							 index_col=None, header=None))
+	# user_arr = complete_user_arr[:, user_cols][:, 1:].astype(np.float64)
+	# user_arr = ss.transform(user_arr)
+	# pred = clf.predict_proba(user_arr)[:, 1]
+	# mx = np.argmax(pred[pred < .9])
+	# print(pred[mx])
+	# for e in complete_user_arr[mx]:
+	# 	print(str(e) + ",", end="")
 
-	X_tmp, y_tmp = get_Xy("data/2014-10-26/", memory_threshold, number_per_hour)
-	print("score %1.8f" % clf.score(X_tmp, y_tmp))
+	while True:
+		log_message = input('Enter a user log message (type exit to exit):\n')
+		if log_message == "exit":
+			print("Thanks for trying this demo out!")
+			break
+		else:
+			print("")
+			try:
+				entry = process_single(log_message)
+				entry = ss.transform(entry)
+				pred = clf.predict_proba(entry)
+				print("The probability that this is a dangerous user is %0.8f percent" % (100.0 *pred[0, 1]))
+			except:
+				print("doesn't look like the message was in the correct format")
+			print("")
+
 
 
 if __name__ == "__main__":

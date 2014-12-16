@@ -45,7 +45,7 @@ def get_Xy(path, mem_thresh, num_prob):
 		mx = np.argsort(trouble_users[:, 3])[-num_prob:]
 		y[trouble_indexes[mx]] = 1
 
-	X = user_arr[:, 1:]
+	X = user_arr[:, 1:].astype(np.float64)
 
 	return X, y
 
@@ -54,42 +54,44 @@ def process_single(message):
 	arr = arr[user_cols]
 	return arr[1:].astype(np.float64)
 
-def loop(reload=False):
+def process():
 	X_train = []
 	y_train = np.array([])
-	if reload:
-		for root, direcs, fi in os.walk("data"):
-			for direc in direcs:
-				print(direc)
-				X_tmp, y_tmp = get_Xy(os.path.join(root, direc),
-									  memory_threshold, number_per_hour)
-				X_train.append(X_tmp)
-				y_train = np.append(y_train, y_tmp)
+	for root, direcs, fi in os.walk("data"):
+		for direc in direcs:
+			print(direc)
+			X_tmp, y_tmp = get_Xy(os.path.join(root, direc),
+								  memory_threshold, number_per_hour)
+			X_train.append(X_tmp)
+			y_train = np.append(y_train, y_tmp)
 
-		X_train = np.vstack(X_train)
+	X_train = np.vstack(X_train)
 
-		ss = StandardScaler()
-		X_train = ss.fit_transform(X_train.astype(np.float64))
+	ss = StandardScaler()
+	X_train = ss.fit_transform(X_train.astype(np.float64))
 
-		clf = SGDClassifier(n_iter=1000, average=True, loss="log")
-		clf.fit(X_train, y_train)
+	clf = SGDClassifier(n_iter=1000, average=True, loss="log")
+	clf.fit(X_train, y_train)
 
-		pickle.dump(clf, open("classifier.p", "wb"))
-		pickle.dump(ss, open("scaler.p", "wb"))
+	pickle.dump(clf, open("classifier.p", "wb"))
+	pickle.dump(ss, open("scaler.p", "wb"))
 
-
+# use to predict full file
+def full_predict():
 	clf = pickle.load(open("classifier.p", "rb"))
 	ss = pickle.load(open("scaler.p", "rb"))
 
-	# complete_user_arr = np.array(p.read_csv("data/2014-10-26/dump_user.csv",
-	# 							 index_col=None, header=None))
-	# user_arr = complete_user_arr[:, user_cols][:, 1:].astype(np.float64)
-	# user_arr = ss.transform(user_arr)
-	# pred = clf.predict_proba(user_arr)[:, 1]
-	# mx = np.argmax(pred[pred < .9])
-	# print(pred[mx])
-	# for e in complete_user_arr[mx]:
-	# 	print(str(e) + ",", end="")
+	# use this code to predict full set
+	X, y = get_Xy("data/2014-07-21/",
+				  memory_threshold, number_per_hour)
+
+	X = ss.fit_transform(X)
+
+	print("score: %.8f" % clf.score(X, y))
+
+def loop():
+	clf = pickle.load(open("classifier.p", "rb"))
+	ss = pickle.load(open("scaler.p", "rb"))
 
 	while True:
 		log_message = input('Enter a user log message (type exit to exit):\n')
@@ -110,4 +112,5 @@ def loop(reload=False):
 
 
 if __name__ == "__main__":
-	loop(False)
+	# process()
+	full_predict()

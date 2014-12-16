@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as p
 import pickle
+import os
 from sklearn.cluster import Birch
 from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
@@ -29,8 +30,10 @@ def transform_t(arr, col):
 		entry[col] = sec
 
 def get_Xy(path, mem_thresh, num_prob):
-	user_arr = np.array(p.read_csv(path + "dump_user.csv", index_col=None, header=None))
-	system_arr = np.array(p.read_csv(path + "dump_system.csv", index_col=None, header=None))
+	user_arr = np.array(p.read_csv(os.path.join(path, "dump_user.csv"),
+						index_col=None, header=None))
+	system_arr = np.array(p.read_csv(os.path.join(path, "dump_system.csv"),
+						  index_col=None, header=None))
 
 	user_arr = user_arr[:, [-2, 3, 5, 6, 7]]
 	system_arr = system_arr[:, [-2, 1, 2, 3]]
@@ -60,14 +63,16 @@ def get_Xy(path, mem_thresh, num_prob):
 	return X, y
 
 def loop(reload=False):
-	data_dirs = ["data/2014-07-21/", "data/2014-09-30/"]
 	X_train = []
 	y_train = np.array([])
 	if reload:
-		for direc in data_dirs:
-			X_tmp, y_tmp = get_Xy(direc, memory_threshold, number_per_hour)
-			X_train.append(X_tmp)
-			y_train = np.append(y_train, y_tmp)
+		for root, direcs, fi in os.walk("data"):
+			for direc in direcs:
+				print(direc)
+				X_tmp, y_tmp = get_Xy(os.path.join(root, direc),
+									  memory_threshold, number_per_hour)
+				X_train.append(X_tmp)
+				y_train = np.append(y_train, y_tmp)
 
 		X_train = np.vstack(X_train)
 
@@ -78,7 +83,8 @@ def loop(reload=False):
 
 	clf = pickle.load(open("classifier.p", "rb"))
 
-	X_tmp, y_tmp = get_Xy("data/2014-07-22/", memory_threshold, number_per_hour)
+
+	X_tmp, y_tmp = get_Xy("data/2014-10-26/", memory_threshold, number_per_hour)
 	print("score %1.8f" % clf.score(X_tmp, y_tmp))
 
 

@@ -2,6 +2,8 @@ import numpy as np
 import pandas as p
 import pickle
 import os
+import time
+from matplotlib import pyplot as plt
 from sklearn.cluster import Birch
 from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
@@ -70,7 +72,11 @@ def process():
 	ss = StandardScaler()
 	X_train = ss.fit_transform(X_train.astype(np.float64))
 
-	clf = SGDClassifier(n_iter=1000, average=True, loss="log")
+	return X_train, y_train
+
+def fit():
+	X_train, y_train = process()
+	clf = SGDClassifier(n_iter=10, average=True, loss="log")
 	clf.fit(X_train, y_train)
 
 	pickle.dump(clf, open("classifier.p", "wb"))
@@ -89,6 +95,32 @@ def full_predict():
 
 	print("score: %.8f" % clf.score(X, y))
 
+def graph_performance():
+	num_values = 20
+	X_train, y_train = process()
+	increment = X_train.shape[0] / num_values
+	clf = SGDClassifier(n_iter=10, average=True, loss="log")
+
+	times = []
+	num_samples = []
+	for i in range(1, num_values):
+		print("training %d" % i)
+		num_samples.append(i * increment)
+		X_slice = X_train[:i * increment]
+		y_slice = y_train[:i * increment]
+		st = time.time()
+		clf.fit(X_slice, y_slice)
+		end = time.time()
+		times.append(end - st)
+
+	plt.close("all")
+	plt.plot(num_samples, times)
+	plt.ylabel("training time (seconds)")
+	plt.xlabel("number of samples")
+	plt.show()
+
+
+
 def loop():
 	clf = pickle.load(open("classifier.p", "rb"))
 	ss = pickle.load(open("scaler.p", "rb"))
@@ -104,13 +136,26 @@ def loop():
 				entry = process_single(log_message)
 				entry = ss.transform(entry)
 				pred = clf.predict_proba(entry)
-				print("The probability that this is a dangerous user is %0.8f percent" % (100.0 *pred[0, 1]))
+				print("The probability that this is a dangerous user is %0.8f "
+					  "percent" % (100.0 *pred[0, 1]))
 			except:
-				print("doesn't look like the message was in the correct format")
+				print("doesn't look like the message "
+					  "was in the correct format")
 			print("")
 
 
 
 if __name__ == "__main__":
-	# process()
-	full_predict()
+	# comment this out after computing so you don't have to keep processing and
+	# fitting
+	process()
+	fit()
+
+	# uncoment to score a full log file
+	# full_predict()
+
+	# try the demo loop
+	loop()
+
+	# graph time performance
+	# graph_performance()

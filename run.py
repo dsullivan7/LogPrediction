@@ -69,13 +69,14 @@ def process():
 
 	X_train = np.vstack(X_train)
 
-	ss = StandardScaler()
-	X_train = ss.fit_transform(X_train.astype(np.float64))
-
 	return X_train, y_train
 
 def fit():
 	X_train, y_train = process()
+
+	ss = StandardScaler()
+	X_train = ss.fit_transform(X_train.astype(np.float64))
+
 	clf = SGDClassifier(n_iter=10, average=True, loss="log")
 	clf.fit(X_train, y_train)
 
@@ -148,7 +149,6 @@ def loop():
 if __name__ == "__main__":
 	# comment this out after computing so you don't have to keep processing and
 	# fitting
-	process()
 	fit()
 
 	# uncoment to score a full log file

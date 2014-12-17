@@ -88,7 +88,7 @@ def fit():
     ss = StandardScaler()
     X_train = ss.fit_transform(X_train.astype(np.float64))
 
-    clf = SGDClassifier(n_iter=10, average=True, loss="log")
+    clf = SGDClassifier(n_iter=500, average=True, loss="log")
     clf.fit(X_train, y_train)
 
     pickle.dump(clf, open("classifier.p", "wb"))
@@ -166,11 +166,13 @@ def to_json():
     obj = {}
 
     obj["weights"] = clf.coef_.tolist()[0]
+    obj["intercept"] = clf.intercept_.tolist()[0]
     obj["scale"] = {}
     obj["scale"]["mean"] = ss.mean_.tolist()
     obj["scale"]["std"] = ss.std_.tolist()
 
-    json.dump(obj, open("web/data/model.json", "w"))
+    f = open("web/public/js/data/model.js", "w")
+    f.write("var slapos_model = " + json.dumps(obj))
 
 if __name__ == "__main__":
     # comment this out after computing so you don't have to keep processing and
@@ -181,10 +183,10 @@ if __name__ == "__main__":
     # full_predict()
 
     # try the demo loop
-    # loop()
+    loop()
 
     # graph time performance
     # graph_performance()
 
     # write to json
-    to_json()
+    # to_json()

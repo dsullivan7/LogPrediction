@@ -3,6 +3,7 @@ import pandas as p
 import pickle
 import os
 import time
+import json
 from matplotlib import pyplot as plt
 from sklearn.cluster import Birch
 from sklearn.preprocessing import StandardScaler
@@ -158,6 +159,18 @@ def loop():
                       "was in the correct format")
             print("")
 
+def to_json():
+    clf = pickle.load(open("classifier.p", "rb"))
+    ss = pickle.load(open("scaler.p", "rb"))
+
+    obj = {}
+
+    obj["weights"] = clf.coef_.tolist()[0]
+    obj["scale"] = {}
+    obj["scale"]["mean"] = ss.mean_.tolist()
+    obj["scale"]["std"] = ss.std_.tolist()
+
+    json.dump(obj, open("web/data/model.json", "w"))
 
 if __name__ == "__main__":
     # comment this out after computing so you don't have to keep processing and
@@ -171,4 +184,7 @@ if __name__ == "__main__":
     # loop()
 
     # graph time performance
-    graph_performance()
+    # graph_performance()
+
+    # write to json
+    to_json()
